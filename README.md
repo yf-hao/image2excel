@@ -16,10 +16,11 @@ python -m pip install -e .
 
 ## 使用
 
-两个图片参数按页面顺序处理：
+图片参数按页面顺序处理，支持一张或更多图片：
 
 ```bash
 image2excel image1.jpg image2.jpg
+image2excel image1.jpg image2.jpg image3.jpg image4.jpg
 ```
 
 默认输出到第一张图片所在目录：

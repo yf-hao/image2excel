@@ -11,10 +11,14 @@ from .pipeline import process_images
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="image2excel",
-        description="从两张学生信息照片中提取姓名和学号并输出 Excel。",
+        description="从多张学生信息照片中提取姓名和学号并输出 Excel。",
     )
-    parser.add_argument("image1", type=Path, help="第1张图片")
-    parser.add_argument("image2", type=Path, help="第2张图片")
+    parser.add_argument(
+        "images",
+        type=Path,
+        nargs="+",
+        help="图片路径，按命令行参数顺序作为第1页、第2页……处理",
+    )
     parser.add_argument(
         "--output",
         type=Path,
@@ -43,7 +47,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    paths = [args.image1, args.image2]
+    paths = args.images
 
     try:
         _validate_inputs(paths, args.columns, args.expected_rows)
