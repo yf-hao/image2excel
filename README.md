@@ -7,9 +7,10 @@
 建议使用 Python 3.11：
 
 ```bash
+git clone https://github.com/yf-hao/image2excel.git
+cd image2excel
 conda create -n image2excel python=3.11 -y
 conda activate image2excel
-cd /Users/yfhao/Documents/study/image2excel
 python -m pip install -e .
 ```
 
