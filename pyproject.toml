@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "image2excel"
+version = "0.1.0"
+description = "Extract student names and IDs from photographed attendance sheets into Excel."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "numpy>=1.26,<3",
+    "opencv-python>=4.9,<5",
+    "openpyxl>=3.1,<4",
+    "paddleocr>=2.7,<3",
+    "paddlepaddle>=3.0,<4",
+]
+
+[project.scripts]
+image2excel = "image2excel.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["image2excel*"]

@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Local photos and OCR output may contain personal information.
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.webp
+*.xls
+*.xlsx
+.~*
