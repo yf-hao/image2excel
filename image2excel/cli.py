@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import datetime
 from pathlib import Path
 
 from .excel_writer import write_excel
@@ -22,7 +23,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        help="Excel 输出路径，默认保存到第1张图片所在目录/image2excel_result.xlsx",
+        help=(
+            "Excel 输出路径，默认保存到第1张图片所在目录，"
+            "文件名为image2excel_YYYYMMDD_HHMMSS.xlsx"
+        ),
     )
     parser.add_argument(
         "--overwrite",
@@ -46,7 +50,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--orientation",
         default="auto",
         help=(
-            "图片方向：auto、0、90、180、270；单个值应用于全部图片，"
+            "图片方向：auto、0、90、180、270或-90（-90等同于270）；单个值应用于全部图片，"
             "也可用逗号按图片顺序指定，例如0,90,auto"
         ),
     )
@@ -61,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         _validate_inputs(paths, args.columns, args.expected_rows)
         orientations = parse_orientation_spec(args.orientation, len(paths))
-        output = args.output or paths[0].parent / "image2excel_result.xlsx"
+        output = args.output or _default_output_path(paths[0], args.overwrite)
         if output.exists() and not args.overwrite:
             raise FileExistsError(
                 f"输出文件已存在：{output}。如需覆盖，请添加 --overwrite。"
@@ -106,7 +110,7 @@ def parse_orientation_spec(value: str, image_count: int) -> list[int | None]:
     """Parse one shared orientation or one orientation per image."""
     tokens = [token.strip().lower() for token in value.split(",")]
     if not tokens or any(not token for token in tokens):
-        raise ValueError("方向参数不能为空，支持auto、0、90、180、270。")
+        raise ValueError("方向参数不能为空，支持auto、0、90、180、270、-90。")
     if len(tokens) not in (1, image_count):
         raise ValueError(
             f"方向参数数量为{len(tokens)}，但图片数量为{image_count}；"
@@ -124,11 +128,25 @@ def parse_orientation_spec(value: str, image_count: int) -> list[int | None]:
         try:
             angle = int(token)
         except ValueError as exc:
-            raise ValueError(f"无效方向：{token}，支持auto、0、90、180、270。") from exc
-        if angle not in (0, 90, 180, 270):
-            raise ValueError(f"无效方向：{token}，支持auto、0、90、180、270。")
-        orientations.append(angle)
+            raise ValueError(f"无效方向：{token}，支持auto、0、90、180、270、-90。") from exc
+        if angle not in (-90, 0, 90, 180, 270):
+            raise ValueError(f"无效方向：{token}，支持auto、0、90、180、270、-90。")
+        orientations.append(angle % 360)
     return orientations
+
+
+def _default_output_path(first_image: Path, overwrite: bool = False) -> Path:
+    timestamp = datetime.now().astimezone().strftime("%Y%m%d_%H%M%S")
+    output = first_image.parent / f"image2excel_{timestamp}.xlsx"
+    if overwrite or not output.exists():
+        return output
+
+    suffix = 1
+    while True:
+        candidate = first_image.parent / f"image2excel_{timestamp}_{suffix:02d}.xlsx"
+        if not candidate.exists():
+            return candidate
+        suffix += 1
 
 
 if __name__ == "__main__":
