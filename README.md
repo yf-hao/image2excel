@@ -35,10 +35,10 @@ image2excel_result.xlsx
 
 ```bash
 # 所有图片使用90°
-image2excel --orientation 90 image1.jpg image2.jpg image3.jpg
+image2excel -o 90 image1.jpg image2.jpg image3.jpg
 
 # image1使用0°，image2使用90°，image3自动检测
-image2excel --orientation 0,90,auto image1.jpg image2.jpg image3.jpg
+image2excel -o 0,90,auto image1.jpg image2.jpg image3.jpg
 ```
 
 支持的方向值为 `auto`、`0`、`90`、`180`、`270`。手动指定方向可以跳过该图片的四方向检测，减少处理时间。

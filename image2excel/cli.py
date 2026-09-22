@@ -42,6 +42,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="完整页面的预期行数，仅用于无锚点时的回退，默认7行",
     )
     parser.add_argument(
+        "-o",
         "--orientation",
         default="auto",
         help=(
