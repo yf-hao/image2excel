@@ -31,10 +31,18 @@ class ImageProcessor:
         self.expected_rows = expected_rows
         self.progress = progress
 
-    def process(self, path: Path, page_index: int) -> list[StudentRecord]:
+    def process(
+        self,
+        path: Path,
+        page_index: int,
+        orientation: int | None = None,
+    ) -> list[StudentRecord]:
         self._report(f"[第{page_index}页] 正在读取：{path.name}")
         original = read_image(path)
-        orientation, _ = self._choose_orientation(original, page_index)
+        if orientation is None:
+            orientation, _ = self._choose_orientation(original, page_index)
+        else:
+            self._report(f"[第{page_index}页] 使用指定方向：{orientation}°")
         oriented = rotate_image(original, orientation)
         corrected = correct_perspective(oriented)
         enhanced = enhance_for_ocr(corrected)
@@ -121,8 +129,14 @@ def process_images(
     paths: list[Path],
     columns: int = 5,
     expected_rows: int = 7,
+    orientations: list[int | None] | None = None,
     progress: ProgressCallback | None = None,
 ) -> list[StudentRecord]:
+    if orientations is None:
+        orientations = [None] * len(paths)
+    if len(orientations) != len(paths):
+        raise ValueError("方向数量必须为1个或与图片数量相同。")
+
     processor = ImageProcessor(
         OcrEngine(),
         columns=columns,
@@ -130,8 +144,11 @@ def process_images(
         progress=progress,
     )
     records: list[StudentRecord] = []
-    for page_index, path in enumerate(paths, start=1):
-        records.extend(processor.process(path, page_index))
+    for page_index, (path, orientation) in enumerate(
+        zip(paths, orientations),
+        start=1,
+    ):
+        records.extend(processor.process(path, page_index, orientation))
     return records
 
 

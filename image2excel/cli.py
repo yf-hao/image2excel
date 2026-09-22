@@ -41,6 +41,14 @@ def build_parser() -> argparse.ArgumentParser:
         default=7,
         help="完整页面的预期行数，仅用于无锚点时的回退，默认7行",
     )
+    parser.add_argument(
+        "--orientation",
+        default="auto",
+        help=(
+            "图片方向：auto、0、90、180、270；单个值应用于全部图片，"
+            "也可用逗号按图片顺序指定，例如0,90,auto"
+        ),
+    )
     return parser
 
 
@@ -51,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         _validate_inputs(paths, args.columns, args.expected_rows)
+        orientations = parse_orientation_spec(args.orientation, len(paths))
         output = args.output or paths[0].parent / "image2excel_result.xlsx"
         if output.exists() and not args.overwrite:
             raise FileExistsError(
@@ -62,6 +71,7 @@ def main(argv: list[str] | None = None) -> int:
             paths,
             columns=args.columns,
             expected_rows=args.expected_rows,
+            orientations=orientations,
             progress=_print_progress,
         )
         write_excel(records, output)
@@ -89,6 +99,35 @@ def _validate_inputs(paths: list[Path], columns: int, expected_rows: int) -> Non
 
 def _print_progress(message: str) -> None:
     print(message, flush=True)
+
+
+def parse_orientation_spec(value: str, image_count: int) -> list[int | None]:
+    """Parse one shared orientation or one orientation per image."""
+    tokens = [token.strip().lower() for token in value.split(",")]
+    if not tokens or any(not token for token in tokens):
+        raise ValueError("方向参数不能为空，支持auto、0、90、180、270。")
+    if len(tokens) not in (1, image_count):
+        raise ValueError(
+            f"方向参数数量为{len(tokens)}，但图片数量为{image_count}；"
+            "请提供一个方向，或为每张图片提供一个方向。"
+        )
+
+    if len(tokens) == 1:
+        tokens *= image_count
+
+    orientations: list[int | None] = []
+    for token in tokens:
+        if token == "auto":
+            orientations.append(None)
+            continue
+        try:
+            angle = int(token)
+        except ValueError as exc:
+            raise ValueError(f"无效方向：{token}，支持auto、0、90、180、270。") from exc
+        if angle not in (0, 90, 180, 270):
+            raise ValueError(f"无效方向：{token}，支持auto、0、90、180、270。")
+        orientations.append(angle)
+    return orientations
 
 
 if __name__ == "__main__":

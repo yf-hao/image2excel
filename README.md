@@ -31,6 +31,18 @@ image2excel_result.xlsx
 
 固定列数默认为 5，行数会根据图片中的文字锚点自动检测。程序支持页面旋转、常见透视变形和只拍到页面局部的情况。
 
+默认方向为 `auto`，会对每张图片自动检测方向。多个图片可以统一指定方向，也可以按图片顺序分别指定：
+
+```bash
+# 所有图片使用90°
+image2excel --orientation 90 image1.jpg image2.jpg image3.jpg
+
+# image1使用0°，image2使用90°，image3自动检测
+image2excel --orientation 0,90,auto image1.jpg image2.jpg image3.jpg
+```
+
+支持的方向值为 `auto`、`0`、`90`、`180`、`270`。手动指定方向可以跳过该图片的四方向检测，减少处理时间。
+
 如需覆盖已有输出文件：
 
 ```bash
