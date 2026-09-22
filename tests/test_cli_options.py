@@ -24,6 +24,10 @@ class OrientationOptionTests(unittest.TestCase):
         args = build_parser().parse_args(["-o", "90", "one.jpg", "two.jpg"])
         self.assertEqual(args.orientation, "90")
 
+    def test_full_orientation_option(self):
+        args = build_parser().parse_args(["--full-orientation", "one.jpg"])
+        self.assertTrue(args.full_orientation)
+
     def test_negative_90_orientation_is_normalized_to_270(self):
         self.assertEqual(parse_orientation_spec("-90", 1), [270])
 

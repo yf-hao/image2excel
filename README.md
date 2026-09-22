@@ -11,6 +11,64 @@ git clone https://github.com/yf-hao/image2excel.git
 cd image2excel
 conda create -n image2excel python=3.11 -y
 conda activate image2excel
+```
+
+### 国内网络加速
+
+在国内使用时，建议在创建环境前将 Conda 默认源切换为清华镜像，并启用 `libmamba` 求解器：
+
+```bash
+conda config --remove-key default_channels
+conda config --add default_channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+conda config --add default_channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
+conda config --add default_channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
+conda config --set show_channel_urls yes
+conda config --set solver libmamba
+```
+
+然后创建环境：
+
+```bash
+conda create -n image2excel python=3.11 -y
+```
+
+如果只想对本次创建临时使用镜像，不修改全局配置：
+
+```bash
+conda create -n image2excel python=3.11 -y \
+  --override-channels \
+  -c https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
+```
+
+需要使用 `conda-forge` 时，可以添加对应镜像：
+
+```bash
+conda config --add custom_channels.conda-forge https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+```
+
+查看 Conda 配置：
+
+```bash
+conda config --show-sources
+conda config --show channels
+```
+
+安装 Python 包时，也可以配置清华 PyPI 镜像：
+
+```bash
+conda activate image2excel
+python -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+如果 Conda 索引缓存异常，可以清理后重试：
+
+```bash
+conda clean -i
+```
+
+配置完成后，安装项目：
+
+```bash
 python -m pip install -e .
 ```
 
@@ -35,6 +93,7 @@ image2excel [选项] 图片路径...
 | `-o, --orientation` | `auto` | 图片方向。支持 `auto`、`0`、`90`、`180`、`270`、`-90`（`-90` 等同于 `270`）；一个值应用于全部图片，也可以用逗号按图片顺序指定 |
 | `--output` | 第1张图片所在目录的 `image2excel_YYYYMMDD_HHMMSS.xlsx` | 指定 Excel 输出路径 |
 | `--overwrite` | 关闭 | 允许覆盖已经存在的 Excel 文件 |
+| `--full-orientation` | 关闭 | 完整检测 `0°`、`90°`、`180°`、`270°`，不使用可靠结果提前结束 |
 | `--columns` | `5` | 固定列数，必须大于0 |
 | `--expected-rows` | `7` | 完整页面的预期行数，仅用于没有文字锚点时的回退，必须大于0 |
 | `-h, --help` | - | 显示帮助信息 |
@@ -66,6 +125,12 @@ image2excel -o 0,90,auto image1.jpg image2.jpg image3.jpg
 ```
 
 支持的方向值为 `auto`、`0`、`90`、`180`、`270`、`-90`。手动指定方向可以跳过该图片的四方向检测，减少处理时间。
+
+自动方向检测默认按 `0°`、`90°`、`180°`、`270°` 的顺序执行；当某个方向识别到足够可靠的文字锚点和学号时，会提前结束检测。需要完整执行四个方向进行比较时，添加：
+
+```bash
+image2excel --full-orientation image1.jpg image2.jpg
+```
 
 覆盖已有文件：
 

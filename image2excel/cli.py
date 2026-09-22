@@ -34,6 +34,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="允许覆盖已经存在的输出文件",
     )
     parser.add_argument(
+        "--full-orientation",
+        action="store_true",
+        help="完整检测0°、90°、180°、270°，不使用可靠结果提前结束",
+    )
+    parser.add_argument(
         "--columns",
         type=int,
         default=5,
@@ -78,6 +83,7 @@ def main(argv: list[str] | None = None) -> int:
             expected_rows=args.expected_rows,
             orientations=orientations,
             progress=_print_progress,
+            full_orientation=args.full_orientation,
         )
         write_excel(records, output)
         normal = sum(record.status == "正常" for record in records)

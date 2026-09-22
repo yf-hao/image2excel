@@ -25,11 +25,13 @@ class ImageProcessor:
         columns: int = 5,
         expected_rows: int = 7,
         progress: ProgressCallback | None = None,
+        full_orientation: bool = False,
     ):
         self.ocr = ocr
         self.columns = columns
         self.expected_rows = expected_rows
         self.progress = progress
+        self.full_orientation = full_orientation
 
     def process(
         self,
@@ -40,7 +42,11 @@ class ImageProcessor:
         self._report(f"[第{page_index}页] 正在读取：{path.name}")
         original = read_image(path)
         if orientation is None:
-            orientation, _ = self._choose_orientation(original, page_index)
+            orientation, _ = self._choose_orientation(
+                original,
+                page_index,
+                full_orientation=self.full_orientation,
+            )
         else:
             self._report(f"[第{page_index}页] 使用指定方向：{orientation}°")
         oriented = rotate_image(original, orientation)
@@ -100,6 +106,7 @@ class ImageProcessor:
         self,
         image: np.ndarray,
         page_index: int,
+        full_orientation: bool = False,
     ) -> tuple[int, list[TextBox]]:
         best_angle = 0
         best_boxes: list[TextBox] = []
@@ -113,6 +120,9 @@ class ImageProcessor:
             score = _orientation_score(boxes)
             if score > best_score:
                 best_angle, best_boxes, best_score = angle, boxes, score
+            if not full_orientation and _is_reliable_orientation(boxes):
+                self._report(f"[第{page_index}页] 方向检测提前结束：{angle}°")
+                return angle, boxes
         return best_angle, best_boxes
 
     @staticmethod
@@ -131,6 +141,7 @@ def process_images(
     expected_rows: int = 7,
     orientations: list[int | None] | None = None,
     progress: ProgressCallback | None = None,
+    full_orientation: bool = False,
 ) -> list[StudentRecord]:
     if orientations is None:
         orientations = [None] * len(paths)
@@ -142,6 +153,7 @@ def process_images(
         columns=columns,
         expected_rows=expected_rows,
         progress=progress,
+        full_orientation=full_orientation,
     )
     records: list[StudentRecord] = []
     for page_index, (path, orientation) in enumerate(
@@ -161,6 +173,20 @@ def _orientation_score(boxes: list[TextBox]) -> float:
     id_count = sum(1 for box in boxes if re.search(r"20\d{8,20}", box.text))
     confidence = sum(box.score for box in boxes)
     return anchor_count * 10 + id_count * 5 + confidence
+
+
+def _is_reliable_orientation(boxes: list[TextBox]) -> bool:
+    anchor_count = sum(
+        1
+        for box in boxes
+        if any(word in box.text.replace(" ", "") for word in ("座位", "姓名", "学号"))
+    )
+    id_count = sum(1 for box in boxes if re.search(r"20\d{8,20}", box.text))
+    high_confidence_count = sum(1 for box in boxes if box.score >= 0.7)
+    return (
+        (anchor_count >= 2 and high_confidence_count >= 2)
+        or (anchor_count >= 1 and id_count >= 2 and high_confidence_count >= 3)
+    )
 
 
 def _resize_for_detection(image: np.ndarray, max_width: int = 1400) -> np.ndarray:
