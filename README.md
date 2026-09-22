@@ -23,6 +23,22 @@ image2excel image1.jpg image2.jpg
 image2excel image1.jpg image2.jpg image3.jpg image4.jpg
 ```
 
+### 命令参数
+
+```text
+image2excel [选项] 图片路径...
+```
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `images` | 必填 | 一个或多个图片路径，按参数顺序作为第1页、第2页……处理。支持 `.jpg`、`.jpeg`、`.png`、`.bmp`、`.webp` |
+| `-o, --orientation` | `auto` | 图片方向。支持 `auto`、`0`、`90`、`180`、`270`；一个值应用于全部图片，也可以用逗号按图片顺序指定 |
+| `--output` | 第1张图片所在目录的 `image2excel_result.xlsx` | 指定 Excel 输出路径 |
+| `--overwrite` | 关闭 | 允许覆盖已经存在的 Excel 文件 |
+| `--columns` | `5` | 固定列数，必须大于0 |
+| `--expected-rows` | `7` | 完整页面的预期行数，仅用于没有文字锚点时的回退，必须大于0 |
+| `-h, --help` | - | 显示帮助信息 |
+
 默认输出到第一张图片所在目录：
 
 ```text
@@ -43,16 +59,31 @@ image2excel -o 0,90,auto image1.jpg image2.jpg image3.jpg
 
 支持的方向值为 `auto`、`0`、`90`、`180`、`270`。手动指定方向可以跳过该图片的四方向检测，减少处理时间。
 
-如需覆盖已有输出文件：
+覆盖已有文件：
 
 ```bash
 image2excel image1.jpg image2.jpg --overwrite
 ```
 
-如需显式指定输出路径：
+指定输出路径：
 
 ```bash
 image2excel image1.jpg image2.jpg --output ./students.xlsx
+```
+
+修改列数和完整页面预期行数：
+
+```bash
+image2excel \
+  --columns 5 \
+  --expected-rows 7 \
+  image1.jpg image2.jpg
+```
+
+查看所有参数：
+
+```bash
+image2excel --help
 ```
 
 ## Excel 工作表
